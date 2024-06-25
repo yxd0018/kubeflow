@@ -463,7 +463,16 @@ export class MainPage extends utilitiesMixin(PolymerElement) {
     }
 
     _toggleMenuSection(e) {
-        e.target.nextElementSibling.toggle();
+        // look upwards until we find <paper-item>
+        let el = e.target;
+        while (el && el.tagName !== 'PAPER-ITEM') {
+            el = el.parentElement;
+        }
+
+        // if we found paper-item, the next sibling is the section
+        if (el) {
+            el.nextElementSibling.toggle();
+        }
     }
 
     /**
@@ -491,7 +500,24 @@ export class MainPage extends utilitiesMixin(PolymerElement) {
             // This case is for non-identity networks, that have no namespaces
             this._setRegistrationFlow(true);
         }
-        this.ownedNamespace = namespaces.find((n) => n.role == 'owner');
+        const ownedNamespaces = [];
+        const editNamespaces = [];
+        const viewNamespaces = [];
+        if (this.namespaces.length) {
+            this.namespaces.forEach((ns) => {
+                if (ns.role === 'owner') {
+                    ownedNamespaces.push(ns);
+                } else if (ns.role === 'contributor') {
+                    editNamespaces.push(ns);
+                } else if (ns.role === 'viewer') {
+                    viewNamespaces.push(ns);
+                }
+            });
+            this.ownedNamespaces = ownedNamespaces;
+            this.editNamespaces = editNamespaces;
+            this.viewNamespaces = viewNamespaces;
+            this.hasNamespaces = true;
+        }
         this.platformInfo = platform;
         const kVer = this.platformInfo.kubeflowVersion;
         if (kVer && kVer != 'unknown') {
